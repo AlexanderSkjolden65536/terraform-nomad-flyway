@@ -3,20 +3,6 @@ job "flyway" {
   datacenters = ["${datacenters}"]
   namespace   = "${namespace}"
 
-  update {
-    max_parallel      = 1
-    health_check      = "checks"
-    min_healthy_time  = "10s"
-    healthy_deadline  = "55m"
-    progress_deadline = "1h"
-%{ if use_canary }
-    canary            = 1
-    auto_promote      = true
-    auto_revert       = true
-%{ endif }
-    stagger           = "30s"
-  }
-
   group "flyway" {
     count = 1
     network {
@@ -25,7 +11,6 @@ job "flyway" {
 
     service {
       name = "${service_name}"
-      port = "${port}"
       check {
         type     = "script"
         name     = "Flyway alive"
@@ -38,11 +23,11 @@ job "flyway" {
       connect {
         sidecar_service {}
         sidecar_task {
-        resources {
-          cpu     = "${cpu_proxy}" # MHz
-          memory  = "${memory_proxy}" #MB
+          resources {
+            cpu     = "${cpu_proxy}" # MHz
+            memory  = "${memory_proxy}" #MB
+            }
           }
-        }
       }
 
     }
@@ -51,10 +36,27 @@ job "flyway" {
       driver = "docker"
       config {
         image = "${image}"
+        volumes = [
+          "flyway/conf/flyway.conf:/flyway/conf/flyway.conf"
+        ]
+        args = [
+          "migrate"
+        ]
       }
       resources {
         cpu    = "${cpu}" # MHz
         memory = "${memory}" # MB
+      }
+
+      template {
+        destination = "flyway/conf/flyway.conf"
+        env         = true
+        data        = <<EOH
+flyway.url=jdbc:${jdbc_protocol}:${jdbc_host}:${jdbc_database}
+flyway.user=${jdbc_username}
+flyway.password=${jdbc_password}
+flyway.schemas=${jdbc_schema}
+EOH
       }
     }
   }

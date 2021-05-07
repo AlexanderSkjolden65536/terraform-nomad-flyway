@@ -20,15 +20,10 @@ variable "host" {
   description = "Flyway host"
   default     = "127.0.0.1"
 }
-variable "port" {
-  type        = number
-  description = "Flyway port"
-  default     = 6379
-}
 variable "container_image" {
   type        = string
   description = "Flyway docker image"
-  default     = "flyway:flyway"
+  default     = "flyway/flyway"
 }
 variable "resource" {
   type = object({
@@ -65,4 +60,27 @@ variable "use_canary" {
   type        = bool
   description = "Uses canary deployment for Flyway"
   default     = false
+}
+
+variable "jdbc" {
+  type = object({
+    host      = string,
+    port      = string,
+    protocol  = string,
+    username  = string,
+    password  = string,
+    database  = string,
+    schema    = string
+  })
+  description = "Flyway JDBC details."
+}
+
+variable "mode" {
+  type        = string
+  description = "Switch for flyway to use external database or memory database"
+  default     = "external"
+  validation {
+    condition     = var.mode == "memory" || var.mode == "external"
+    error_message = "Valid modes: \"external\" or \"memory\"."
+  }
 }
