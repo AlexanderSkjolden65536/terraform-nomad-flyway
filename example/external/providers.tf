@@ -1,7 +1,7 @@
 data "vault_generic_secret" "nomad_secret_id" {
   # Set count of this data source to 1 if ACLs are enabled in Nomad, and 0 if not
   count = var.nomad_acl ? 1 : 0
-  path  = "nomad/creds/producer-role"
+  path  = "nomad/creds/write"
 }
 
 provider "nomad" {
@@ -12,8 +12,7 @@ provider "nomad" {
 
 provider "vault" {
   address = "http://127.0.0.1:8200"
-  # Terraform imports TF_VAR_vault_master_token from the box env
-  token = var.vault_master_token
+  token   = "master"
 }
 
 terraform {
